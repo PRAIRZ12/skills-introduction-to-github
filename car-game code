@@ -1,0 +1,106 @@
+import pygame
+import random
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Simple Car Racing Game")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (200, 0, 0)
+GREEN = (0, 200, 0)
+
+# Clock and font
+clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 48)
+
+# Car settings
+car_width, car_height = 50, 100
+car = pygame.Rect(WIDTH // 2 - car_width // 2, HEIGHT - car_height - 10, car_width, car_height)
+car_speed = 5
+
+# Obstacle settings
+obstacle_width, obstacle_height = 50, 100
+obstacle_speed = 7
+obstacles = []
+
+# Score
+score = 0
+
+# Function to draw text
+def draw_text(text, font, color, surface, x, y):
+    text_obj = font.render(text, True, color)
+    rect = text_obj.get_rect()
+    rect.topleft = (x, y)
+    surface.blit(text_obj, rect)
+
+# Game over screen
+def game_over():
+    screen.fill(BLACK)
+    draw_text("GAME OVER!", font, RED, screen, WIDTH // 2 - 100, HEIGHT // 2 - 50)
+    draw_text(f"Score: {score}", font, WHITE, screen, WIDTH // 2 - 60, HEIGHT // 2)
+    pygame.display.update()
+    pygame.time.wait(2000)
+    pygame.quit()
+    sys.exit()
+
+# Main game loop
+def main():
+    global score
+    running = True
+    obstacle_timer = 0
+
+    while running:
+        screen.fill((50, 50, 50))  # Background
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Key press handling
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and car.left > 0:
+            car.move_ip(-car_speed, 0)
+        if keys[pygame.K_RIGHT] and car.right < WIDTH:
+            car.move_ip(car_speed, 0)
+
+        # Spawn obstacles
+        obstacle_timer += 1
+        if obstacle_timer > 30:
+            obstacle_timer = 0
+            new_obstacle = pygame.Rect(random.randint(0, WIDTH - obstacle_width), -obstacle_height, obstacle_width, obstacle_height)
+            obstacles.append(new_obstacle)
+
+        # Move obstacles
+        for obstacle in obstacles[:]:
+            obstacle.move_ip(0, obstacle_speed)
+            if obstacle.top > HEIGHT:
+                obstacles.remove(obstacle)
+                score += 1
+
+            if car.colliderect(obstacle):
+                game_over()
+
+        # Draw car
+        pygame.draw.rect(screen, GREEN, car)
+
+        # Draw obstacles
+        for obstacle in obstacles:
+            pygame.draw.rect(screen, RED, obstacle)
+
+        # Draw score
+        draw_text(f"Score: {score}", font, WHITE, screen, 10, 10)
+
+        pygame.display.update()
+        clock.tick(60)
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
